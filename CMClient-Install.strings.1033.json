@@ -1,0 +1,15 @@
+{
+    "Messages":{
+        "DIVIDER": "----------------------------------------",
+        "LOG_FILE_LOADED": "Log file location loaded from the %1 registry value at %2",
+        "BEGIN": "Beginning Execution at %1.",
+        "LOADED_STRINGS_FILE": "Successfully loaded strings file from %1."
+    },
+    "Errors":{
+
+    },
+    "Defaults":{
+        "REGISTRY_LOCATION": "HKLM:\\Software\\ConfigMgrStartup",
+        "REGISTRY_LOGLOCATION_VALUE": "Log Location"
+    }
+}
