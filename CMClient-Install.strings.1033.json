@@ -1,15 +1,34 @@
 {
     "Messages":{
         "DIVIDER": "----------------------------------------",
-        "LOG_FILE_LOADED": "Log file location loaded from the %1 registry value at %2",
+        "LOG_FILE_LOADED": "Log file location loaded from the '%1' registry value at '%2'.",
+        "LOG_FILE_NOT_LOADED": "Log file location was not loaded from the registry.",
+        "LOG_FILE_STORED": "Stored location of log file (%1) in the registry value '%2' at '%3'.",
         "BEGIN": "Beginning Execution at %1.",
-        "LOADED_STRINGS_FILE": "Successfully loaded strings file from %1."
+        "FINISH": "Finished Execution at %1.",
+        "ELAPSED_TIME": "Total script execution time is %1.",
+        "STRINGS_FILE_LOADED": "Successfully loaded strings file from %1.",
+        "CONFIG_FILE_LOADING": "Loading configuration file from '%1'.",
+        "CONFIG_FILE_LOADED": "Successfully loaded configuration file.",
+        "CONFIG_ITEMS_FOUND": "Found the following %1 items in the configuration file ...",
+        "CONFIG_ITEM_FOUND": " * %1: %2"
     },
     "Errors":{
-
+        "NOT_ADMIN": "Current execution context/user is not elevated.",
+        "LOG_FILE_NOT_STORED": "Unable to save log file location in registry.",
+        "IN_WINPE": "Running in WinPE.",
+        "CONFIG_FILE_NOT_FOUND": "Cannot find configuration file at %1.",
+        "CONFIG_FILE_LOAD_ERROR": "Error loading configuration file: %1"
     },
     "Defaults":{
         "REGISTRY_LOCATION": "HKLM:\\Software\\ConfigMgrStartup",
-        "REGISTRY_LOGLOCATION_VALUE": "Log Location"
+        "REGISTRY_LOGLOCATION_VALUE": "Log Location",
+        "XML_ROOT_ELEMENT": "Configuration",
+        "XML_OPTION_ELEMENT": "Option",
+        "XML_OPTION_ELEMENT_NAME": "Option",
+        "XML_PROPERTY_ELEMENT": "InstallProperty",
+        "XML_PROPERTY_ELEMENT_NAME": "Property",
+        "XML_PARAMETER_ELEMENT": "CCMSetupParameter",
+        "XML_PARAMETER_ELEMENT_NAME": "Parameter"
     }
 }
