@@ -11,7 +11,18 @@
         "CONFIG_FILE_LOADING": "Loading configuration file from '%1'.",
         "CONFIG_FILE_LOADED": "Successfully loaded configuration file.",
         "CONFIG_ITEMS_FOUND": "Found the following %1 items in the configuration file ...",
-        "CONFIG_ITEM_FOUND": " * %1: %2"
+        "CONFIG_ITEM_FOUND": " * %1: %2",
+        "PREREQ": "Checking prerequsities ...",
+        "PREREQ_SERVICE": "* Service named '%1' (%2): %result",
+        "PREREQ_REGKEY": "* Registry key '%1' (%2): %result",
+        "PREREQ_REGVALUE": "* Registry value named '%1' at '%2' (%3): %result",
+        "PREREQ_EXISTS": "exists",
+        "PREREQ_DOESNOTEXIST": "does not exist",
+        "PREREQ_TYPE": "Type",
+        "PREREQ_ALLPASSED":	"* All prerequisities passed",
+        "PREREQ_ONEFAILED":	"* At least one prequisitie failed, exiting ...",
+        "PASSED": "Passed",
+        "FAILED": "Failed"
     },
     "Errors":{
         "NOT_ADMIN": "Current execution context/user is not elevated.",
@@ -23,12 +34,20 @@
     "Defaults":{
         "REGISTRY_LOCATION": "HKLM:\\Software\\ConfigMgrStartup",
         "REGISTRY_LOGLOCATION_VALUE": "Log Location",
-        "XML_ROOT_ELEMENT": "Configuration",
-        "XML_OPTION_ELEMENT": "Option",
-        "XML_OPTION_ELEMENT_NAME": "Option",
-        "XML_PROPERTY_ELEMENT": "InstallProperty",
-        "XML_PROPERTY_ELEMENT_NAME": "Property",
-        "XML_PARAMETER_ELEMENT": "CCMSetupParameter",
-        "XML_PARAMETER_ELEMENT_NAME": "Parameter"
+        "XML_ELEMENT_ROOT": "Configuration",
+        "XML_ELEMENT_OPTION": "Option",
+        "XML_ELEMENT_NAME_OPTION": "Option",
+        "XML_ELEMENT_PROPERTY": "InstallProperty",
+        "XML_ELEMENT_NAME_PROPERTY": "Property",
+        "XML_ELEMENT_PARAMETER": "CCMSetupParameter",
+        "XML_ELEMENT_NAME_PARAMETER": "Parameter",
+        "XML_ELEMENT_PREREQ": "PreReq",
+        "XML_PREREQ_TYPE_SERVICE": "Service",
+        "XML_PREREQ_TYPE_REGKEY": "RegKey",
+        "XML_PREREQ_TYPE_REGVALUE": "RegValue",
+        "XML_PREREQ_TYPE_PROPERTY": "Type",
+        "XML_PREREQ_CONDITION_PROPERTY": "Condition",
+        "XML_PREREQ_CONDITION_MUST_EXIST": "MustExist",
+        "XML_PREREQ_CONDITION_MUST_NOT_EXIST": "MustNotExist"
     }
 }

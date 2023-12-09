@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 <Configuration>
+	<PreReq Type="Service" Condition="MustNotExist">BITS1</PreReq>
+	<PreReq Type="Service" Condition="MustNotExist">BITS</PreReq>
+	<PreReq Type="RegKey" Condition="MustExist">HKLM:\Software\Gadzoox</PreReq>
+	<PreReq Type="RegKey" Condition="MustNotExist">HKLM:\Software\Microsoft</PreReq>
+	<PreReq Type="RegValuex" Condition="MustExist">HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\FeatureSetUsage:DisplayMultiMon</PreReq>
 	<Option Name="LocalAdmin">lab1/dadmin</Option>
 	<Option Name="SiteCode" >100</Option>
 	<Option Name="CacheSize">10240</Option>
