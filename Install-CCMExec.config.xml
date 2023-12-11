@@ -1,23 +1,38 @@
 <?xml version="1.0"?>
-<Configuration>
-	<PreReq Type="Service" Condition="MustNotExist">BITS1</PreReq>
-	<PreReq Type="Service" Condition="MustNotExist">BITS</PreReq>
-	<PreReq Type="RegKey" Condition="MustExist">HKLM:\Software\Gadzoox</PreReq>
-	<PreReq Type="RegKey" Condition="MustNotExist">HKLM:\Software\Microsoft</PreReq>
-	<PreReq Type="RegValuex" Condition="MustExist">HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\FeatureSetUsage:DisplayMultiMon</PreReq>
-	<Option Name="LocalAdmin">lab1/dadmin</Option>
-	<Option Name="SiteCode" >100</Option>
-	<Option Name="CacheSize">10240</Option>
-	<Option Name="AgentVersion">5.00.8853.1000</Option>
-	<Option Name="MinimumInterval">0</Option>
-	<Option Name="ClientLocation">\\cm100\ConfigMgr\Client\Install</Option>
-	<Option Name="MaxLogFile">2048</Option>
-	<Option Name="ErrorLocation">\\cm100\ConfigMgr\Client\ErrorLogs</Option>
-	<Option Name="Delay" >5</Option>
-	<!-- <Option Name="Debug">1</Option> -->
-	<!-- <Option Name="SiteReassign">1</Option> -->
-	<InstallProperty Name="FSP"></InstallProperty>
-	<InstallProperty Name="SMSMP">cm101.lab1.configmgrftw.com</InstallProperty>
-	<CCMSetupParameter Name="mp">cm101.lab1.configmgrftw.com</CCMSetupParameter>
-	<CCMSetupParameter Name="BITSPriority">HIGH</CCMSetupParameter>
+<Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns="http://home.configmgrftw.com/Install-CCMExec">
+	<Prerequisites>
+		<Service Condition="MustNotExist">BITS1</Service>
+		<Service Condition="MustExist">BITS</Service>
+		<RegKey Condition="MustNotExist">HKLM:\Software\Microsoft2</RegKey>
+		<RegKey Condition="MustExist">HKLM:\Software\Microsoft</RegKey>
+		<RegValue Condition="MustExist">HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\FeatureSetUsage:DisplayMultiMon</RegValue>
+	</Prerequisites>
+	<Checks>
+		<Service Name="BITS" State="Running" StartMode="Auto" Enforce="True" />
+		<Service Name="winmgmt" State="Running" StartMode="Auto" Enforce="True" />
+		<Service Name="wuauserv" State="Running" StartMode="Auto" Enforce="True" />
+		<Service Name="lanmanserver" State="Running" StartMode="Auto" Enforce="True" />
+		<Service Name="RpcSs" State="Running" StartMode="Auto" Enforce="True" />
+		<RegValue Key="HKLM\SOFTWARE\Microsoft\SMS\Mobile Client" Value="GPRequestedSiteAssignmentCode" Delete="True" />
+	</Checks>
+	<ScriptOptions>
+		<Option Name="LocalAdmin">lab1/dadmin</Option>
+		<Option Name="SiteCode" >100</Option>
+		<Option Name="CacheSize">10240</Option>
+		<Option Name="AgentVersion">5.00.8853.1000</Option>
+		<Option Name="MinimumInterval">0</Option>
+		<Option Name="ClientLocation">\\cm100\ConfigMgr\Client\Install</Option>
+		<Option Name="MaxLogFile">2048</Option>
+		<Option Name="ErrorLocation">\\cm100\ConfigMgr\Client\ErrorLogs</Option>
+		<Option Name="Delay" >5</Option>
+		<!-- <Option Name="Debug">1</Option> -->
+		<!-- <Option Name="SiteReassign">1</Option> -->
+	</ScriptOptions>
+	<InstallOptions>
+		<Property Name="FSP"></Property>
+		<Property Name="SMSMP">cm101.lab1.configmgrftw.com</Property>
+		<Parameter Name="mp">cm101.lab1.configmgrftw.com</Parameter>
+		<Parameter Name="BITSPriority">HIGH</Parameter>
+	</InstallOptions>
 </Configuration>

@@ -174,18 +174,75 @@ function Out-Configuration {
         [parameter(Mandatory=$true)]
         [HashTable]$Properties,
 
-        [Parameter(Mandatory=$true)]
-        [string]$ConfigurationType,
+        [parameter(Mandatory=$true)]
+        [System.Xml.XmlElement]$ParentElement,
 
         [Parameter(Mandatory=$true)]
-        [string]$ConfigurationTypeXMLElement
+        [string]$ConfigurationType
     )
 
     Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.CONFIG_ITEMS_FOUND -MessageVars @{1=$ConfigurationType}
 
-    foreach($item in $Properties.Config.DocumentElement.$ConfigurationTypeXMLElement) {
+    foreach($item in $ParentElement.GetElementsByTagName($ConfigurationType)) {
         Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.CONFIG_ITEM_FOUND -MessageVars @{1=$item.Name;2=$item.'#text'}
     }
+}
+
+function Test-Configuration {
+    [CmdletBinding()]
+    param (
+        [parameter(Mandatory=$true)]
+        [HashTable]$Properties
+    )
+    
+    try {
+        $standardXSDFoundinXML = $false
+        $standardSchemaNS = "http://home.configmgrftw.com/$($Properties.Name)"
+        $standardSchemaFile = "$($Properties.Name).config.xsd"
+        $doc = [System.Xml.XmlDocument]$Properties.Config
+        $schemaLocations = $doc.DocumentElement.schemaLocation -split '\s+' -match '\S'
+        $schemaSet = New-Object System.Xml.Schema.XmlSchemaSet
+        
+        while ($schemaLocations) {
+            $schemaNamespace, $schemaURI, $schemaLocations = $schemaLocations
+            $schemaSet.Add($schemaNamespace, $schemaURI)
+
+            if($schemaNamespace -eq $standardSchemaNS -and $schemaURI -eq $standardSchemaFile) {
+                $standardXSDFoundinXML = $true
+            }
+        }
+
+        if(-not $standardXSDFoundinXML) {
+            $schemaSet.Add($standardSchemaNS, $standardSchemaFile)    
+        }
+
+        $schemaSet.Compile()
+        $doc.Schemas.Add($schemaSet)
+
+        $doc.Validate([System.Xml.Schema.ValidationEventHandler] {
+            param ([object] $sender, [System.Xml.Schema.ValidationEventArgs] $e)
+            throw $e.Exception
+        })
+    }
+    catch {
+
+        if($null -ne $_.Exception.InnerException) {
+            if($null -ne $_.Exception.InnerException.InnerException) {
+                $e = $_.Exception.InnerException.InnerException
+            }
+            else {
+                $e = $_.Exception.InnerException
+            }
+        }
+        else {
+            $e = $_.Exception
+        }
+
+        Write-LogMsg -MsgProperties $Properties -MsgType Error -Message $Properties.Strings.Errors.CONFIG_FILE_VALIDATE_ERROR -MessageVars @{1=$e.Message}
+        return $false
+    }
+
+    return $true
 }
 
 function Open-Config {
@@ -198,7 +255,7 @@ function Open-Config {
         [HashTable]$Properties
     )
 
-    if($ConfigurationFile -eq "") {
+    if($ConfigurationFile -eq "" -Or $null -eq $ConfigurationFile) {
         $ConfigurationFile = "$($Properties.Location)\$($Properties.Name).config.xml"
     }
 
@@ -210,22 +267,31 @@ function Open-Config {
 
         try {
             $Properties.Config.Load(($ConfigurationFile))
-
-            Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.CONFIG_FILE_LOADED
-
-            Out-Configuration -Properties $Properties -ConfigurationType $Properties.Strings.Defaults.XML_ELEMENT_NAME_OPTION -ConfigurationTypeXMLElement $Properties.Strings.Defaults.XML_ELEMENT_OPTION
-            Out-Configuration -Properties $Properties -ConfigurationType $Properties.Strings.Defaults.XML_ELEMENT_NAME_PROPERTY -ConfigurationTypeXMLElement $Properties.Strings.Defaults.XML_ELEMENT_PROPERTY
-            Out-Configuration -Properties $Properties -ConfigurationType $Properties.Strings.Defaults.XML_ELEMENT_NAME_PARAMETER -ConfigurationTypeXMLElement $Properties.Strings.Defaults.XML_ELEMENT_PARAMETER
-            $true
         }
-        catch [System.Xml.XmlException] {
+        catch {
             Write-LogMsg -MsgProperties $Properties -MsgType Error -Message $Properties.Strings.Errors.CONFIG_FILE_LOAD_ERROR -MessageVars @{1=$_.Exception.Message}
-            $false
+            return $false
         }
+
+        # if(-not (Test-Configuration -Properties $Properties)) {
+        #     return $false
+        # }
+
+        $config = @{
+            $Properties.Strings.Defaults.XML_ELEMENT_OPTION = $Properties.Config.DocumentElement.$($Properties.Strings.Defaults.XML_ELEMENT_SCRIPTOPTIONS)
+            $Properties.Strings.Defaults.XML_ELEMENT_PROPERTY = $Properties.Config.DocumentElement.$($Properties.Strings.Defaults.XML_ELEMENT_INSTALLOPTIONS)
+            $Properties.Strings.Defaults.XML_ELEMENT_PARAMETER = $Properties.Config.DocumentElement.$($Properties.Strings.Defaults.XML_ELEMENT_INSTALLOPTIONS)
+        }
+
+        foreach($item in $config.Keys) {
+            Out-Configuration -Properties $Properties -ConfigurationType $item -ParentElement $config.$item
+        }
+        
+        return $true
     }
     else {
         Write-LogMsg -MsgProperties $Properties -MsgType Error -Message $Properties.Strings.Errors.CONFIG_FILE_NOT_FOUND -MessageVars @{1=$ConfigurationFile}
-        $false
+        return $false
     }
 }
 
@@ -257,9 +323,10 @@ function Test-Prereqs {
         [HashTable]$Properties
     )
 
-    Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.PREREQ
+    $allPassed = $true
+    Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.START_CHECK_PREREQS
 
-    foreach($item in $Properties.Config.DocumentElement.$($Properties.Strings.Defaults.XML_ELEMENT_PREREQ)) {
+    foreach($item in $Properties.Config.DocumentElement.$($Properties.Strings.Defaults.XML_ELEMENT_PREREQ).ChildNodes) {
         
         $condition = $item.$($Properties.Strings.Defaults.XML_PREREQ_CONDITION_PROPERTY)
         $msgType = ''
@@ -274,39 +341,66 @@ function Test-Prereqs {
             break
         }
         
-        $type = $item.$($Properties.Strings.Defaults.XML_PREREQ_TYPE_PROPERTY)
+        $type = $item.LocalName
 
         try {
-            if($type -eq $Properties.Strings.Defaults.XML_PREREQ_TYPE_REGKEY) {
+            if($type -eq $Properties.Strings.Defaults.XML_ELEMENT_REGKEY) {
                 $msg = $Properties.Strings.Messages.PREREQ_REGKEY
-                $msgVars = @{1=$item.'#text';2=$condition}
+                $msgVars = @{2=$item.'#text';3=$condition}
                 $itemExists = Test-Path -Path $item.'#text' -PathType Container -ErrorAction Stop
             }
-            elseif($type -eq $Properties.Strings.Defaults.XML_PREREQ_TYPE_SERVICE){
+            elseif($type -eq $Properties.Strings.Defaults.XML_ELEMENT_SERVICE){
                 $msg = $Properties.Strings.Messages.PREREQ_SERVICE
-                $msgVars = @{1=$item.'#text';2=$condition}
+                $msgVars = @{2=$item.'#text';3=$condition}
                 $itemExists = ((Get-Service -Name $item.'#text' -ErrorAction SilentlyContinue).Count -gt 0)
             }
-            elseif($type -eq $Properties.Strings.Defaults.XML_PREREQ_TYPE_REGVALUE) {
+            elseif($type -eq $Properties.Strings.Defaults.XML_ELEMENT_REGVALUE) {
                 $msg = $Properties.Strings.Messages.PREREQ_REGVALUE
                 $reg = $item.'#text' -split ':', -2
-                $msgVars = @{1=$reg[0];2=$reg[1];3=$condition}
-                #$itemExists = ((Get-ItemProperty -Name $item.'#text' -ErrorAction SilentlyContinue).Count -gt 0)
+                $msgVars = @{2=$reg[0];3=$reg[1];4=$condition}
+                $itemExists = ((Get-ItemProperty -Path $reg[0] -Name $reg[1] -ErrorAction SilentlyContinue).Count -gt 0)
             }
             else {
                 break
             }
 
             $msgType = 'Info'
-            $msgVars['result'] = Get-PassFailString -Properties $Properties -Condition $item.Condition -PassFail $itemExists
+            $msgVars['1'] = Get-PassFailString -Properties $Properties -Condition $item.Condition -PassFail $itemExists
         }
         catch {
             $msgType = 'Error'
-            $msgVars['result'] = $_
+            $msgVars['1'] = $_
+            $allPassed = $false
         }
 
         Write-LogMsg -MsgProperties $Properties -MsgType $msgType -Message $msg -MessageVars $msgVars
 
+        if($msgVars['1'] -eq $Properties.Strings.Messages.FAILED) {
+            $allPassed = $false
+        }
+    }
+
+    if($allPassed) {
+        Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.PREREQ_ALLPASSED
+        return $true
+    }
+    else {
+        Write-LogMsg -MsgProperties $Properties -MsgType Error -Message $Properties.Strings.Errors.PREREQ_ONEFAILED
+        return $false
+    }
+}
+
+function Test-Services {
+    [CmdletBinding()]
+    param (
+        [parameter(Mandatory=$true)]
+        [HashTable]$Properties
+    )
+
+    Write-LogMsg -MsgProperties $Properties -MsgType Info -Message $Properties.Strings.Messages.START_CHECK_SERVICES
+
+    foreach($item in $Properties.Config.DocumentElement.$($Properties.Strings.Defaults.XML_ELEMENT_CHECKS).$($Properties.Strings.Defaults.XML_ELEMENT_SERVICE)) {
+        Write-Host $item.Name
     }
 }
 
@@ -345,7 +439,9 @@ elseif($msgFileLoaded -eq $true) {
 
     if((Open-Config -ConfigurationFile $ConfigurationFilePath -Properties $scriptProperties) -eq $true) {
 
-        Test-Prereqs -Properties $scriptProperties
+        if(Test-Prereqs -Properties $scriptProperties) {
+            Test-Services -Properties $scriptProperties
+        }
 
     }
 }
